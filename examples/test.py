@@ -7,5 +7,5 @@ tsl.set_time(0x00)
 
 for x in range(0,100):
 
-        print "lux %s" % tsl.lux()
+        print("lux %s" % tsl.lux())
         time.sleep(0.1)

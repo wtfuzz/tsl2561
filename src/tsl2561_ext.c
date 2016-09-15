@@ -19,7 +19,8 @@ typedef struct {
 static void TSL2561_dealloc(TSL2561_Object *self) {
 	tsl2561_close(self->tsl2561);
     self->tsl2561 = NULL;
-    self->ob_type->tp_free((PyObject*)self);
+    //self->ob_type->tp_free((PyObject*)self);
+    Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
 
@@ -52,7 +53,11 @@ static int TSL2561_init(TSL2561_Object *self, PyObject *args, PyObject *kwds) {
 static PyObject *TSL2561_lux(TSL2561_Object *self) {
 	PyObject *result;
 	long lux = tsl2561_lux(self->tsl2561);
+#if PY_MAJOR_VERSION >= 3
+        result = PyLong_FromLong(lux);
+#else
 	result = PyInt_FromLong(lux);
+#endif
 	return result;
 }
 
@@ -143,8 +148,7 @@ static PyMemberDef TSL2561_members[] = {
 
 
 static PyTypeObject TSL2561_Type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
+    PyVarObject_HEAD_INIT(NULL, 0)
     "tentacle_pi.TSL2561",             /*tp_name*/
     sizeof(TSL2561_Object),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
@@ -190,18 +194,52 @@ static PyMethodDef module_methods[] = {
 
 
 
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC PyInit_TSL2561(void) {
+#else
 PyMODINIT_FUNC initTSL2561(void) {
+#endif
 	PyObject *m;
 
 	if(PyType_Ready(&TSL2561_Type) < 0)
+#if PY_MAJOR_VERSION >= 3
+		return NULL;
+#else
 		return;
+#endif
 
+#if PY_MAJOR_VERSION >= 3
+    static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "TSL2561",     /* m_name */
+        "TSL2561 extension module",  /* m_doc */
+        -1,                  /* m_size */
+        module_methods,    /* m_methods */
+        NULL,                /* m_reload */
+        NULL,                /* m_traverse */
+        NULL,                /* m_clear */
+        NULL,                /* m_free */
+    };
+#endif
+
+#if PY_MAJOR_VERSION >= 3
+	m = PyModule_Create(&moduledef);
+#else
 	m = Py_InitModule3("TSL2561", module_methods, "TSL2561 extension module");
+#endif
 
 	if(m == NULL)
+#if PY_MAJOR_VERSION >= 3
+		return NULL;
+#else
 		return;
+#endif
 
 	Py_INCREF(&TSL2561_Type);
 	PyModule_AddObject(m, "TSL2561", (PyObject *)&TSL2561_Type);
+
+#if PY_MAJOR_VERSION >= 3
+	return m;
+#endif
 
 }
